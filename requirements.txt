@@ -4,3 +4,4 @@ tqdm
 bs4
 loguru
 dateparser
+pymupdf

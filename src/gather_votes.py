@@ -6,9 +6,8 @@ import requests
 from bs4 import BeautifulSoup, ResultSet, Tag
 from tqdm import tqdm
 from loguru import logger
+import uuid
 
-
-BUNDESTAG_BASE_URL = "https://www.bundestag.de"
 
 
 def get_votes_html(start_offset: int, limit: int = 30) -> ResultSet:
@@ -22,7 +21,7 @@ def get_votes_html(start_offset: int, limit: int = 30) -> ResultSet:
         ResultSet: A BeautifulSoup ResultSet containing <tr> elements for the table rows (excluding header).
     """
     url = (
-        f"{BUNDESTAG_BASE_URL}/ajax/filterlist/de/parlament/plenum/abstimmung/"
+        "https://www.bundestag.de/ajax/filterlist/de/parlament/plenum/abstimmung/"
         f"liste/462112-462112?limit={limit}&noFilterSet=false&offset={start_offset}"
     )
     response = requests.get(url)
@@ -56,11 +55,12 @@ def parse_vote_row(vote_element: Tag) -> dict:
             xls_link = link["href"]
 
     return {
+        "id": str(uuid.uuid4()),  # Generate a unique ID for each vote
         "name": name,
         "date": date_cell.text.strip(),
         "topic": topic_cell.text.strip(),
-        "xls_url": f"{BUNDESTAG_BASE_URL}{xls_link}" if xls_link else None,
-        "pdf_url": f"{BUNDESTAG_BASE_URL}{pdf_link}" if pdf_link else None,
+        "xls_url": xls_link or None,
+        "pdf_url": pdf_link or None,
         "doctype": doctype_cell.text.strip(),
     }
 
