@@ -1,0 +1,6 @@
+requests
+pandas
+tqdm
+bs4
+loguru
+dateparser
