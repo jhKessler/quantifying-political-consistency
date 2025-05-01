@@ -1,3 +1,4 @@
+import re
 import pandas as pd
 import requests
 from tqdm import tqdm
@@ -28,4 +29,6 @@ def extract_first_page_text(pdf_path: str):
 
 def extract_pdf_text(path: str) -> str:
     with pymupdf.open(path) as doc:
-        return "\n".join(page.get_text() for page in doc)
+        all_pages = "\n".join(page.get_text() for page in doc)
+        clean = re.sub(r"\s+", " ", all_pages)
+        return clean.strip()

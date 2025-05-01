@@ -10,13 +10,14 @@ def download_manifestos():
 
     os.makedirs("data/tmp/manifestos", exist_ok=True)
     os.makedirs("data/text/manifestos", exist_ok=True)
+
     pbar = tqdm(total=len(urls), desc="Downloading manifestos", unit="manifesto")
     for _, row in urls.iterrows():
         pbar.update(1)
         url = row["url"]
         local_path = f"data/tmp/manifestos/{row['party']}_{row['year']}.pdf"
         download_file(url, local_path)
-        
+
         text_path = f"data/text/manifestos/{row['party']}_{row['year']}.txt"
         manifesto_text = pdf_utils.extract_pdf_text(local_path)
 

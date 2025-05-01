@@ -77,12 +77,10 @@ def gather_vote_texts():
     """
     logger.info("Gathering vote texts from Bundestag website...")
 
-    # Load the DataFrame containing vote information
     df = pd.read_parquet("data/parquet/votes.parquet")
 
     pbar = tqdm(total=len(df), desc="Downloading vote texts", unit="vote")
 
-    # Iterate through each row in the DataFrame and download the vote text
     for _, vote in df.iterrows():
         pbar.update(1)
         try:
