@@ -25,3 +25,7 @@ def extract_first_page_text(pdf_path: str):
     text = doc[0].get_text()
     doc.close()
     return text
+
+def extract_pdf_text(path: str) -> str:
+    with pymupdf.open(path) as doc:
+        return "\n".join(page.get_text() for page in doc)
