@@ -6,6 +6,7 @@ from time import sleep
 import pymupdf
 from loguru import logger
 
+
 def extract_first_page_text(pdf_path: str):
     """
     Extracts the text content from the first page of a PDF file.
@@ -22,10 +23,11 @@ def extract_first_page_text(pdf_path: str):
         logger.error(f"PDF file {pdf_path} has no pages.")
         doc.close()
         return None
-    
+
     text = doc[0].get_text()
     doc.close()
     return text
+
 
 def extract_pdf_text(path: str) -> str:
     with pymupdf.open(path) as doc:

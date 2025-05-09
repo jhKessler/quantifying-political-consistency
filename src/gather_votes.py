@@ -1,4 +1,5 @@
 import os
+import re
 import time
 import dateparser
 import pandas as pd
@@ -7,7 +8,6 @@ from bs4 import BeautifulSoup, ResultSet, Tag
 from tqdm import tqdm
 from loguru import logger
 import uuid
-
 
 
 def get_votes_html(start_offset: int, limit: int = 30) -> ResultSet:
@@ -54,8 +54,18 @@ def parse_vote_row(vote_element: Tag) -> dict:
         elif link.get("title", "").startswith("XLS"):
             xls_link = link["href"]
 
+    pattern = r"(\d{8})(?:_(\d+))?"
+    try:
+        only_filename = os.path.basename(xls_link)
+        match = re.search(pattern, only_filename)
+        day, number = match.groups()
+        abstimmungs_id = "_".join(match.groups()) if number else day
+    except Exception as e:
+        logger.error(f"Failed to extract ID from {xls_link}")
+        abstimmungs_id = None
+
     return {
-        "id": str(uuid.uuid4()),  # Generate a unique ID for each vote
+        "id": abstimmungs_id,  # Generate a unique ID for each vote
         "name": name,
         "date": date_cell.text.strip(),
         "topic": topic_cell.text.strip(),

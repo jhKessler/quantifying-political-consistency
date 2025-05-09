@@ -7,6 +7,7 @@ from src.utils import pdf_utils
 from tqdm import tqdm
 
 
+
 def regex_relevant_ids(vote_name: str) -> list[str]:
     """
     Extracts relevant IDs from the vote name using regex.
@@ -17,10 +18,44 @@ def regex_relevant_ids(vote_name: str) -> list[str]:
     Returns:
         list[str]: A list of extracted IDs.
     """
-    pattern = re.compile(r"\b\d{2}/\d*\b")
+    pattern = re.compile(r"\b\d{2}/\d+\b")
+        
     matches = pattern.findall(vote_name)
     return list(set(matches))
 
+
+def regex_drucksache(first_page_text: str) -> list[str]:
+    """
+    Extracts Drucksache IDs from the first page text using regex.
+
+    Args:
+        first_page_text (str): The text of the first page of the PDF.
+
+    Returns:
+        list[str]: A list of extracted Drucksache IDs.
+    """
+    # example "Drucksache 20/15096" only extract first occurrence
+    pattern = re.compile(r"Drucksache\s+\d{1,2}/\d+")
+    matches = pattern.findall(first_page_text)
+    if matches:
+        return matches[0].split(" ")[1].replace("/", "_")
+    return None
+
+def regex_date(first_page_text: str) -> str:
+    """
+    Extracts the date from the first page text using regex.
+
+    Args:
+        first_page_text (str): The text of the first page of the PDF.
+
+    Returns:
+        str: The extracted date.
+    """
+    pattern = re.compile(r"(\d{1,2}\.\d{1,2}\.\d{4})")
+    matches = pattern.findall(first_page_text)
+    if matches:
+        return matches[0]
+    return None
 
 def extract_relevant_ids(vote_pdf_path: str) -> list[str]:
     first_page_text = pdf_utils.extract_first_page_text(vote_pdf_path)
@@ -34,9 +69,9 @@ def extract_relevant_ids(vote_pdf_path: str) -> list[str]:
     return relevant_ids
 
 
-def download_vote_text(vote: pd.Series):
+def download_vote_texts(vote: pd.Series):
     """
-    Downloads the vote text from the given URL and saves it to the specified directory.
+    Downloads the vote texts from the given URL and saves it to the specified directory.
 
     Args:
         vote (pd.Series): A row from the DataFrame containing vote information.
@@ -55,6 +90,8 @@ def download_vote_text(vote: pd.Series):
 
     for index, relevant_id in enumerate(relevant_ids):
         bundestag_number, vote_number = relevant_id.split("/")
+        zeroes_to_add = max(0, 5 - len(vote_number))
+        vote_number = f"{'0'*zeroes_to_add}{vote_number}"
         url = f"https://dserver.bundestag.de/btd/{bundestag_number}/{vote_number[:3]}/{bundestag_number}{vote_number}.pdf"
         logger.info(
             f"Downloading {url} to data/tmp/texts/{vote['id']}/{vote['id']}_{index}.pdf"
@@ -65,6 +102,26 @@ def download_vote_text(vote: pd.Series):
             logger.info(f"File already exists: {filename}")
             continue
         download_file(url, filename)
+        first_page_text = pdf_utils.extract_first_page_text(filename)
+        if first_page_text is None:
+            logger.error(f"Failed to extract text from {filename}")
+            continue
+        drucksache_id = regex_drucksache(first_page_text)
+        if drucksache_id is None:
+            logger.error(f"Failed to extract Drucksache ID from {filename}")
+            os.remove(filename)  # remove the file if no drucksache ID is found
+            continue
+        date = regex_date(first_page_text)
+        if date is None:
+            logger.error(f"Failed to extract date from {filename}")
+            os.remove(filename)
+            continue        # rename the file to include the drucksache ID
+        new_filename = f"data/tmp/texts/{vote['id']}/drucksache_{drucksache_id}_date_{date.replace('.', '_')}.pdf"
+        if os.path.exists(new_filename):
+            logger.info(f"File already exists: {new_filename}")
+            os.remove(filename)
+            continue
+        os.rename(filename, new_filename)
 
 
 def gather_vote_texts():
@@ -84,6 +141,7 @@ def gather_vote_texts():
     for _, vote in df.iterrows():
         pbar.update(1)
         try:
-            download_vote_text(vote)
+            download_vote_texts(vote)
         except Exception as e:
             logger.error(f"Failed to download or process {vote['name']}: {e}")
+            logger.error(f"Vote data: {vote}")
