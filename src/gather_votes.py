@@ -38,7 +38,7 @@ def parse_vote_row(vote_element: Tag) -> dict:
         vote_element (Tag): A BeautifulSoup Tag representing the <tr> element for one vote row.
 
     Returns:
-        dict: A dictionary with parsed fields: 'name', 'date', 'topic', 'xls_url', 'pdf_url', 'doctype'.
+        dict: A dictionary with parsed fields: 'id"#, 'name', 'date', 'topic', 'xls_url', 'pdf_url', 'doctype'.
     """
     date_cell, topic_cell, data_cell, doctype_cell = vote_element.find_all("td")
     name_tag = data_cell.find(class_="bt-documents-description").find("p")
@@ -65,7 +65,7 @@ def parse_vote_row(vote_element: Tag) -> dict:
         abstimmungs_id = None
 
     return {
-        "id": abstimmungs_id,  # Generate a unique ID for each vote
+        "id": abstimmungs_id,
         "name": name,
         "date": date_cell.text.strip(),
         "topic": topic_cell.text.strip(),
@@ -141,3 +141,4 @@ def gather_vote_urls():
     raw_data = scrape_votes()
     clean_df = clean_vote_data(raw_data)
     clean_df.to_parquet("data/parquet/votes.parquet", index=False)
+    

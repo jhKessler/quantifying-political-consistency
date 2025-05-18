@@ -7,7 +7,6 @@ from src.utils import pdf_utils
 from tqdm import tqdm
 
 
-
 def regex_relevant_ids(vote_name: str) -> list[str]:
     """
     Extracts relevant IDs from the vote name using regex.
@@ -19,7 +18,7 @@ def regex_relevant_ids(vote_name: str) -> list[str]:
         list[str]: A list of extracted IDs.
     """
     pattern = re.compile(r"\b\d{2}/\d+\b")
-        
+
     matches = pattern.findall(vote_name)
     return list(set(matches))
 
@@ -35,11 +34,12 @@ def regex_drucksache(first_page_text: str) -> list[str]:
         list[str]: A list of extracted Drucksache IDs.
     """
     # example "Drucksache 20/15096" only extract first occurrence
-    pattern = re.compile(r"Drucksache\s+\d{1,2}/\d+")
+    pattern = re.compile(r"Drucksache\s+(\d{1,2}/\d+)")
     matches = pattern.findall(first_page_text)
     if matches:
-        return matches[0].split(" ")[1].replace("/", "_")
+        return matches[0].replace("/", "_")
     return None
+
 
 def regex_date(first_page_text: str) -> str:
     """
@@ -51,11 +51,12 @@ def regex_date(first_page_text: str) -> str:
     Returns:
         str: The extracted date.
     """
-    pattern = re.compile(r"(\d{1,2}\.\d{1,2}\.\d{4})")
+    pattern = re.compile(r"(\d{1,2}\.\s*\d{1,2}\.\s*\d{4})")
     matches = pattern.findall(first_page_text)
     if matches:
-        return matches[0]
+        return re.sub("\s+", "", matches[0])
     return None
+
 
 def extract_relevant_ids(vote_pdf_path: str) -> list[str]:
     first_page_text = pdf_utils.extract_first_page_text(vote_pdf_path)
@@ -68,8 +69,12 @@ def extract_relevant_ids(vote_pdf_path: str) -> list[str]:
         return []
     return relevant_ids
 
+def extract_document_type(first_page_text: str) -> str:
+    lines = [line for line in first_page_text.splitlines() if line.strip()]
+    return lines[4].strip()
 
-def download_vote_texts(vote: pd.Series):
+
+def download_vote_texts(vote: pd.Series) -> list[dict]:
     """
     Downloads the vote texts from the given URL and saves it to the specified directory.
 
@@ -82,47 +87,44 @@ def download_vote_texts(vote: pd.Series):
         if col not in vote:
             raise ValueError(f"Missing required column: {col}")
 
-    os.makedirs("data/tmp/vote_pdf", exist_ok=True)
-    local_path = f"data/tmp/vote_pdf/{vote['id']}.pdf"
-    download_file(vote["pdf_url"], local_path)
+    os.makedirs(f"data/tmp/vote_pdf/{vote['id']}/drucksachen", exist_ok=True)
 
+    # extract all relevant drucksachen for this vote
+    local_path = f"data/tmp/vote_pdf/{vote['id']}/vote.pdf"
+    download_file(vote["pdf_url"], local_path)
     relevant_ids = extract_relevant_ids(local_path)
+
+    documents = []
 
     for index, relevant_id in enumerate(relevant_ids):
         bundestag_number, vote_number = relevant_id.split("/")
         zeroes_to_add = max(0, 5 - len(vote_number))
-        vote_number = f"{'0'*zeroes_to_add}{vote_number}"
+        vote_number = f"{'0' * zeroes_to_add}{vote_number}"
         url = f"https://dserver.bundestag.de/btd/{bundestag_number}/{vote_number[:3]}/{bundestag_number}{vote_number}.pdf"
-        logger.info(
-            f"Downloading {url} to data/tmp/texts/{vote['id']}/{vote['id']}_{index}.pdf"
-        )
-        os.makedirs(f"data/tmp/texts/{vote['id']}", exist_ok=True)
-        filename = f"data/tmp/texts/{vote['id']}/{vote['id']}_{index}.pdf"
-        if os.path.exists(filename):
-            logger.info(f"File already exists: {filename}")
-            continue
+        filename = f"data/tmp/vote_pdf/{vote['id']}/drucksachen/{index}.pdf"
         download_file(url, filename)
+
         first_page_text = pdf_utils.extract_first_page_text(filename)
-        if first_page_text is None:
+        if not first_page_text:
             logger.error(f"Failed to extract text from {filename}")
             continue
-        drucksache_id = regex_drucksache(first_page_text)
-        if drucksache_id is None:
-            logger.error(f"Failed to extract Drucksache ID from {filename}")
-            os.remove(filename)  # remove the file if no drucksache ID is found
-            continue
-        date = regex_date(first_page_text)
-        if date is None:
-            logger.error(f"Failed to extract date from {filename}")
-            os.remove(filename)
-            continue        # rename the file to include the drucksache ID
-        new_filename = f"data/tmp/texts/{vote['id']}/drucksache_{drucksache_id}_date_{date.replace('.', '_')}.pdf"
-        if os.path.exists(new_filename):
-            logger.info(f"File already exists: {new_filename}")
-            os.remove(filename)
-            continue
-        os.rename(filename, new_filename)
 
+        drucksache_id = regex_drucksache(first_page_text)
+        date = regex_date(first_page_text)
+        document_type = extract_document_type(first_page_text)
+
+        if not drucksache_id or not date:
+            logger.error(f"Failed to extract drucksache or date from {filename} drucksache: {drucksache_id} date: {date}")
+            continue
+        
+        documents.append({
+            "vote_id": vote["id"],
+            "filename": filename,
+            "drucksache": drucksache_id,
+            "date": date,
+            "document_type": document_type
+        })
+    return documents
 
 def gather_vote_texts():
     """
@@ -137,11 +139,19 @@ def gather_vote_texts():
     df = pd.read_parquet("data/parquet/votes.parquet")
 
     pbar = tqdm(total=len(df), desc="Downloading vote texts", unit="vote")
-
+    all_documents = []
     for _, vote in df.iterrows():
         pbar.update(1)
         try:
-            download_vote_texts(vote)
+            all_documents.extend(download_vote_texts(vote))
         except Exception as e:
             logger.error(f"Failed to download or process {vote['name']}: {e}")
             logger.error(f"Vote data: {vote}")
+    
+    pbar.close()
+    logger.info("Vote texts gathered successfully.")
+    logger.info("Building dataframe of vote texts...")
+    all_texts = pd.DataFrame(all_documents).drop_duplicates(subset=["vote_id", "drucksache"]).to_parquet("data/parquet/vote_texts.parquet", index=False)
+    logger.info("Dataframe of vote texts built successfully. Saved to data/parquet/vote_texts.parquet")
+    logger.info("Gathering vote texts completed.")
+    return all_texts

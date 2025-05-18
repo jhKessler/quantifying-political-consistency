@@ -12,7 +12,6 @@ def download_file(fileurl: str, save_to_path: str):
         save_to_path (str): The file path to save the downloaded file to.
     """
     if os.path.exists(save_to_path):
-        logger.info(f"File already exists: {save_to_path}")
         return
     
     r = requests.get(fileurl, stream=True)
@@ -21,5 +20,4 @@ def download_file(fileurl: str, save_to_path: str):
         for chunk in r.iter_content(chunk_size=1024):
             if chunk:
                 f.write(chunk)
-    logger.info(f"Downloaded {fileurl} to {save_to_path}")
     return save_to_path
