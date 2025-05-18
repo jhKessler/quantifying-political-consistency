@@ -69,9 +69,54 @@ def extract_relevant_ids(vote_pdf_path: str) -> list[str]:
         return []
     return relevant_ids
 
+
 def extract_document_type(first_page_text: str) -> str:
-    lines = [line for line in first_page_text.splitlines() if line.strip()]
-    return lines[4].strip()
+    counts = [
+        "Erste",
+        "Zweite",
+        "Dritte",
+        "Vierte",
+        "Fünfte",
+        "Sechste",
+        "Siebte",
+        "Achte",
+        "Neunte",
+        "Zehnte",
+        "Erster",
+        "Zweiter",
+        "Dritter",
+        "Vierter",
+        "Fünfter",
+        "Sechster",
+        "Siebter",
+        "Achter",
+        "Neunter",
+        "Zehnter"
+    ]
+    types = [
+        "Beschlussempfehlung und Bericht",
+        "Beschlussempfehlung",
+        "Gesetzentwurf",
+        "Antrag",
+        "Änderungsantrag",
+        "Entschließungsantrag",
+        "Bericht",
+        "Unterrichtung",
+        "Ergänzung zu den Beschlussempfehlungen",
+        "Kleine Anfrage",
+        "Verordnung",
+        "Antwort",
+        "Große Anfrage"
+    ]
+    for line in first_page_text.splitlines():
+        line = line.strip()
+        for doc_type in types:
+            if line.startswith(doc_type):
+                return doc_type
+            for count in counts:
+                if line.startswith(f"{count} {doc_type}"):
+                    return doc_type
+    return "Unknown"
 
 
 def download_vote_texts(vote: pd.Series) -> list[dict]:
@@ -104,7 +149,7 @@ def download_vote_texts(vote: pd.Series) -> list[dict]:
         filename = f"data/tmp/vote_pdf/{vote['id']}/drucksachen/{index}.pdf"
         download_file(url, filename)
 
-        first_page_text = pdf_utils.extract_first_page_text(filename)
+        first_page_text = pdf_utils.extract_first_page_text(filename).strip()
         if not first_page_text:
             logger.error(f"Failed to extract text from {filename}")
             continue
@@ -114,17 +159,22 @@ def download_vote_texts(vote: pd.Series) -> list[dict]:
         document_type = extract_document_type(first_page_text)
 
         if not drucksache_id or not date:
-            logger.error(f"Failed to extract drucksache or date from {filename} drucksache: {drucksache_id} date: {date}")
+            logger.error(
+                f"Failed to extract drucksache or date from {filename} drucksache: {drucksache_id} date: {date}"
+            )
             continue
-        
-        documents.append({
-            "vote_id": vote["id"],
-            "filename": filename,
-            "drucksache": drucksache_id,
-            "date": date,
-            "document_type": document_type
-        })
+
+        documents.append(
+            {
+                "vote_id": vote["id"],
+                "filename": filename,
+                "drucksache": drucksache_id,
+                "date": date,
+                "document_type": document_type,
+            }
+        )
     return documents
+
 
 def gather_vote_texts():
     """
@@ -147,11 +197,17 @@ def gather_vote_texts():
         except Exception as e:
             logger.error(f"Failed to download or process {vote['name']}: {e}")
             logger.error(f"Vote data: {vote}")
-    
+
     pbar.close()
     logger.info("Vote texts gathered successfully.")
     logger.info("Building dataframe of vote texts...")
-    all_texts = pd.DataFrame(all_documents).drop_duplicates(subset=["vote_id", "drucksache"]).to_parquet("data/parquet/vote_texts.parquet", index=False)
-    logger.info("Dataframe of vote texts built successfully. Saved to data/parquet/vote_texts.parquet")
+    all_texts = (
+        pd.DataFrame(all_documents)
+        .drop_duplicates(subset=["vote_id", "drucksache"])
+        .to_parquet("data/parquet/vote_texts.parquet", index=False)
+    )
+    logger.info(
+        "Dataframe of vote texts built successfully. Saved to data/parquet/vote_texts.parquet"
+    )
     logger.info("Gathering vote texts completed.")
     return all_texts
