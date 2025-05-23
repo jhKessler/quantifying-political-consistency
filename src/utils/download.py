@@ -13,7 +13,7 @@ def download_file(fileurl: str, save_to_path: str):
     """
     if os.path.exists(save_to_path):
         return
-    
+
     r = requests.get(fileurl, stream=True)
     r.raise_for_status()
     with open(save_to_path, "wb") as f:

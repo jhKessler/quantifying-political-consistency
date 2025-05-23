@@ -41,4 +41,3 @@ def extract_content(path: str, opt="text") -> str | list[tuple]:
                 blocks = sorted(page.get_text("blocks"), key=lambda x: x[1])
                 all_blocks.extend(blocks)
             return all_blocks
-

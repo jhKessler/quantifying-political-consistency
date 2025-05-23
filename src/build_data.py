@@ -36,4 +36,3 @@ def build_data():
     all_drucksachen.to_parquet("data/parquet/drucksachen_base.parquet", index=False)
     all_votes.to_parquet("data/parquet/votes_base.parquet", index=False)
     build_votes_dataframe()
-

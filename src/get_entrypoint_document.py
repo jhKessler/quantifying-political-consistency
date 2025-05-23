@@ -23,26 +23,36 @@ def get_entrypoint_documents():
                 logger.warning(f"Vote {vote['id']} Does not have any drucksachen")
                 continue
             drucksachen_for_this_vote = drucksachen_by_vote.get_group(vote["id"]).copy()
-            available_drucksachen = [{"index": index, "title": title} for index, title in enumerate(drucksachen_for_this_vote["title"].values)]
-            
+            available_drucksachen = [
+                {"index": index, "title": title}
+                for index, title in enumerate(drucksachen_for_this_vote["title"].values)
+            ]
+
             if len(available_drucksachen) == 1:
                 matched_drucksache = drucksachen_for_this_vote.iloc[0]
             else:
                 match = openai_utils.match_drucksache_to_vote(
-                    vote["title"],
-                    available_drucksachen
+                    vote["title"], available_drucksachen
                 )
                 matched_drucksache = drucksachen_for_this_vote.iloc[match.index]
 
-            all_entrypoints.append({
-                "vote": vote["id"],
-                "drucksache_title": matched_drucksache["title"],
-                "drucksache_id": matched_drucksache["drucksache"],
-            })
+            all_entrypoints.append(
+                {
+                    "vote": vote["id"],
+                    "drucksache_title": matched_drucksache["title"],
+                    "drucksache_id": matched_drucksache["drucksache"],
+                }
+            )
 
     entrypoints = pd.DataFrame(all_entrypoints)
     entrypoints["type"] = entrypoints["drucksache_title"].str.split(" ").str[0]
-    entrypoints.loc[entrypoints["type"].str.startswith("Beschlussempfehlung"), "type"] = "Beschlussempfehlung"
+    entrypoints.loc[
+        entrypoints["type"].str.startswith("Beschlussempfehlung"), "type"
+    ] = "Beschlussempfehlung"
     # drop all other types
-    entrypoints = entrypoints[entrypoints["type"].isin(["Gesetzentwurf", "Beschlussempfehlung", "Antrag", "Änderungsantrag"])]
+    entrypoints = entrypoints[
+        entrypoints["type"].isin(
+            ["Gesetzentwurf", "Beschlussempfehlung", "Antrag", "Änderungsantrag"]
+        )
+    ]
     entrypoints.to_parquet("data/parquet/vote_entrypoints.parquet", index=False)

@@ -19,9 +19,10 @@ def assert_vote_download(vote: pd.Series):
         os.remove(filename)
         raise e
 
+
 def get_vote(vote_id: str, opt="text", first_page_only=False) -> str:
     filename = f"data/tmp/votes/{vote_id}.pdf"
-    
+
     if not os.path.exists(filename):
         raise FileNotFoundError(f"Vote {vote_id} not found. Please download it first.")
 

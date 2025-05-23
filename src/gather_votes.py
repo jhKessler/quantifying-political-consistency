@@ -141,4 +141,3 @@ def gather_vote_urls():
     raw_data = scrape_votes()
     clean_df = clean_vote_data(raw_data)
     clean_df.to_parquet("data/parquet/votes.parquet", index=False)
-    
