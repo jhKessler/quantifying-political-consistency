@@ -26,5 +26,11 @@ schauen welche art:
 änderungsantrag (dann zusammenfassen von NUR dem änderungsantrag)
 gesetzesentwurf (dann zusammenfassen von gesetzesentwurf)
 entschließungsantrag (ignorieren, da keine rechtswirkung und schwierig zu modellieren)
-beschlussempfehlung (schauen ob die empfehlung für oder gegen den gesetzesentwurf ist, dann zusammenfassen des gesetzesentwurfes und evtl negierung des ergebnisses)
+beschlussempfehlung (schauen ob die empfehlung für oder gegen den gesetzesentwurf ist, dann zusammenfassen des gesetzesentwurfes und evtl negierung des ergebnisses, je nachdem was die empfehlung ist)
 antrag (wird gleich behandelt wie ein gesetzesentwurf, auch wenn es keine gesetzliche Wirkung hat)
+
+llm das folgendes macht:
+
+vergleicht titel der des main dokuments mit allen drucksachentiteln, sucht das richtige aus
+und gibt den pfad zurück
+
