@@ -7,3 +7,9 @@ dateparser
 pymupdf
 python-dotenv
 openai
+langchain
+langchain-community
+pyarrow
+chromadb
+langchain-openai
+langchain-chroma

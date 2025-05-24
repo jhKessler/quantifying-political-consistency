@@ -38,5 +38,6 @@ def summarize_texts():
             i, summary = future.result()
             summarizations[i] = summary
             pbar.update(1)
+            
     content["summary"] = summarizations
     content.to_parquet("data/parquet/votes_content_summarized.parquet", index=False)

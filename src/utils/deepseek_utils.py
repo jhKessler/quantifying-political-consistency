@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 from openai import OpenAI
 import os
-
+from loguru import logger
 load_dotenv()
 
 client = OpenAI(
@@ -10,12 +10,12 @@ client = OpenAI(
 )
 
 
-def prompt_deepseek(system_prompt: str, text: str) -> str:
+def prompt_deepseek(system_prompt: str, text: str, model: str = "deepseek-chat") -> str:
     response = client.chat.completions.create(
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": text},
         ],
-        model="deepseek-chat",
+        model=model,
     )
     return response.choices[0].message.content

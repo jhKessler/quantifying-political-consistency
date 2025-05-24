@@ -34,3 +34,10 @@ llm das folgendes macht:
 vergleicht titel der des main dokuments mit allen drucksachentiteln, sucht das richtige aus
 und gibt den pfad zurück
 
+
+
+etnscheidungen:
+
+die parteivorsätze ändern sich dann wenn das neue parteiprogramm beschlossen wird, nicht wenn der neue bundestag gebildet wurde
+es ist wichtig aus sowlh den wahlprogrammen und den gesetzesentwürfen/anträgen den parteinamen rauszufiltern damit das llm nicht bias wird wenn es die partei weiß
+damit es nur um inhalte geht
