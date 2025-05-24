@@ -1,19 +1,13 @@
 import os
-import re
-import pandas as pd
+
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_openai import OpenAIEmbeddings
 from langchain_chroma import Chroma
-from datetime import datetime
-from src.utils.deepseek_utils import prompt_deepseek
+from langchain_openai import OpenAIEmbeddings
 from loguru import logger
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from tqdm import tqdm
-from loguru import logger
-import pandas as pd
 
+from src.prediction import config
 
-embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+embeddings = OpenAIEmbeddings(model=config.EMBEDDING_MODEL)
 
 
 def embed_manifestos(party: str) -> dict[str, Chroma]:
@@ -31,7 +25,7 @@ def embed_manifestos(party: str) -> dict[str, Chroma]:
         for p in os.listdir(manifesto_dir)
         if p.startswith(party)
     ]
-    
+
     docs_by_year = {}
     for path in manifesto_paths:
         year = os.path.basename(path).split("_")[-1].replace(".txt", "")
@@ -44,14 +38,9 @@ def embed_manifestos(party: str) -> dict[str, Chroma]:
         store_path = os.path.join(vs_root, f"{party}_{year}")
         if os.path.exists(store_path):
             vectorstores[year] = Chroma(
-                persist_directory=store_path,
-                embedding_function=embeddings
+                persist_directory=store_path, embedding_function=embeddings
             )
         else:
-            vs = Chroma.from_documents(
-                docs,
-                embeddings,
-                persist_directory=store_path
-            )
+            vs = Chroma.from_documents(docs, embeddings, persist_directory=store_path)
             vectorstores[year] = vs
     return vectorstores

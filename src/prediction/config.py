@@ -1,12 +1,3 @@
-import os
-
-DATA_DIR = "data"
-VECTORSTORE_DIR = os.path.join(DATA_DIR, "vectorstores")
-
-MANIFESTO_DIR = os.path.join(DATA_DIR, "text", "manifestos_cleaned")
-VOTE_EMB_PATH = os.path.join(DATA_DIR, "parquet", "votes_summarized_embeddings.parquet")
-META_PATH = os.path.join(DATA_DIR, "csv", "manifestos.csv")
-
 EMBEDDING_MODEL = "text-embedding-3-small"
 DEEPSEEK_MODEL = "deepseek-chat"
 THREADS = 8

@@ -1,17 +1,15 @@
 import os
 import re
-import pandas as pd
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_openai import OpenAIEmbeddings
-from langchain_chroma import Chroma
-from datetime import datetime
-from src.utils.deepseek_utils import prompt_deepseek
-from loguru import logger
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from tqdm import tqdm
-from loguru import logger
+from datetime import datetime
+
 import pandas as pd
+from langchain_chroma import Chroma
+from loguru import logger
+from tqdm import tqdm
+
 from src.prediction import config, embeddings
+from src.utils.deepseek_utils import prompt_deepseek
 
 
 def get_correct_manifesto_year(
@@ -41,7 +39,9 @@ def predict_vote(
     if relevant_year is None:
         return None
     vs = chroma_store[relevant_year]
-    results = vs.similarity_search_by_vector(embedding=vote["embedding"], k=5)
+    results = vs.similarity_search_by_vector(
+        embedding=vote["embedding"], k=config.SIMILARITY_K
+    )
 
     llm_context = "\n".join([doc.page_content for doc in results])
     decision_text = prompt_deepseek(
@@ -50,6 +50,7 @@ def predict_vote(
             Wahlprogramm: {llm_context} 
             Antrag: {vote["vote"]}
         """,
+        model=config.DEEPSEEK_MODEL,
     )
     cleaned = re.sub(r"[^a-zA-Z ]", "", decision_text).strip()
     if cleaned.startswith("stimmt nicht zu"):
@@ -79,7 +80,7 @@ def predict_partyline(party: str, vote_embeddings: pd.DataFrame) -> list[dict]:
     decisions = [None] * len(vote_embeddings)
     manifesto_embeddings = embeddings.embed_manifestos(party)
     with (
-        ThreadPoolExecutor(max_workers=8) as pool,
+        ThreadPoolExecutor(max_workers=config.THREADS) as pool,
         tqdm(total=len(vote_embeddings)) as pbar,
     ):
         futures = [
