@@ -45,3 +45,6 @@ damit es nur um inhalte geht
 
 fragen:
 gibt es unterschied zwischen wahlrpgramm und voting , nach kategorie? danach wie eine andere partei voted?
+unterschied nach typ? bschlussempfelung, antrag, gesetzentwurf?
+korrelation mit umfrageergebnissen?
+beschlussempfehlungen wo parteien teilweise gegen wahlprogramm stimmen: deal zwischen parteien?

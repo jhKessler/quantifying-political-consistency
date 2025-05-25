@@ -1,5 +1,5 @@
 EMBEDDING_MODEL = "text-embedding-3-small"
-DEEPSEEK_MODEL = "deepseek-chat"
+DEEPSEEK_MODEL = "deepseek-reasoner"
 THREADS = 8
 SIMILARITY_K = 5
 

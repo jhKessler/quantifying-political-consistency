@@ -119,6 +119,6 @@ def predict_party_votes():
         vote_embeddings[f"{party}_decision"] = party_lines
 
     vote_embeddings.to_parquet(
-        "data/parquet/predicted_votes.parquet",
+        f"data/parquet/predicted_votes_{config.DEEPSEEK_MODEL}.parquet",
         index=False,
     )
