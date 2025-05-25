@@ -1,12 +1,12 @@
 from dotenv import load_dotenv
 from openai import OpenAI
 from pydantic import BaseModel
-
+from src.prediction import config
 load_dotenv()
 client = OpenAI()
 
 
-def get_embedding(text: str, model="text-embedding-3-small") -> list[float]:
+def get_embedding(text: str, model=config.EMBEDDING_MODEL) -> list[float]:
     response = client.embeddings.create(input=text, model=model)
     return response.data[0].embedding
 

@@ -48,11 +48,11 @@ def predict_vote(
         system_prompt=config.DEEPSEEK_SYSTEM_PROMPT,
         text=f"""
             Wahlprogramm: {llm_context} 
-            Antrag: {vote["vote"]}
+            Antrag: {vote["summary"]}
         """,
         model=config.DEEPSEEK_MODEL,
     )
-    cleaned = re.sub(r"[^a-zA-Z ]", "", decision_text).strip()
+    cleaned = re.sub(r"[^a-zA-Zä ]", "", decision_text).strip()
     if cleaned.startswith("stimmt nicht zu"):
         decision = "ablehnung"
     elif cleaned.startswith("stimmt zu"):
@@ -66,17 +66,17 @@ def predict_vote(
 
 
 def process(
-    idx: int, row: pd.Series, chroma_store: dict[str, Chroma], party: str
+    idx: int, row: pd.Series, chroma_store: dict[str, Chroma], party: str, manifestos_metadata: pd.DataFrame
 ) -> tuple[int, str | None]:
     try:
-        return idx, predict_vote(row, chroma_store, party)
+        return idx, predict_vote(row, chroma_store, party, manifestos_metadata)
     except Exception as e:
         logger.error(f"Error processing row: {row['vote']}")
         logger.exception(e)
         return idx, None
 
 
-def predict_partyline(party: str, vote_embeddings: pd.DataFrame) -> list[dict]:
+def predict_partyline(party: str, vote_embeddings: pd.DataFrame, manifesto_metadata: pd.DataFrame) -> list[dict]:
     decisions = [None] * len(vote_embeddings)
     manifesto_embeddings = embeddings.embed_manifestos(party)
     with (
@@ -84,7 +84,7 @@ def predict_partyline(party: str, vote_embeddings: pd.DataFrame) -> list[dict]:
         tqdm(total=len(vote_embeddings)) as pbar,
     ):
         futures = [
-            pool.submit(process, i, row, manifesto_embeddings, party)
+            pool.submit(process, i, row, manifesto_embeddings, party, manifesto_metadata)
             for i, (_, row) in enumerate(vote_embeddings.iterrows())
         ]
         for future in as_completed(futures):
@@ -113,9 +113,9 @@ def predict_party_votes():
         manifestos_metadata["valid_starting"], format="%d.%m.%Y"
     )
 
-    for party in ["AfD", "DIE_GRÜNEN", "DIE_LINKE", "FDP", "SPD", "Union"]:
+    for party in config.PARTIES:
         logger.info(f"Processing party: {party}")
-        party_lines = predict_partyline(party, vote_embeddings)
+        party_lines = predict_partyline(party, vote_embeddings, manifestos_metadata)
         vote_embeddings[f"{party}_decision"] = party_lines
 
     vote_embeddings.to_parquet(
