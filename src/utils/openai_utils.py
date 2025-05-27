@@ -1,3 +1,4 @@
+from typing import List
 from dotenv import load_dotenv
 from openai import OpenAI
 from pydantic import BaseModel
@@ -31,6 +32,41 @@ def match_drucksache_to_vote(
             },
         ],
         text_format=MatchingTitle,
+    )
+
+    event = response.output_parsed
+    return event
+
+class CategoryEntry(BaseModel):
+    category: str
+    percentage: int
+
+class LobbyregisterEntryDistribution(BaseModel):
+    categories: List[CategoryEntry]
+
+
+def classify_lobbyregister_entry(
+        entry: dict
+) -> LobbyregisterEntryDistribution:
+    response = client.responses.parse(
+        model="gpt-4.1-mini",
+        input=[
+            {
+                "role": "system",
+                "content": rf"""
+                    Gegeben ist der folgende Eintrag im Lobbyregister.
+                    Geb für jede Kategorie eine Prozentzahl, wie viel des Geldes du schätzt für jede Kategorie ausgegeben wird.
+                    Die Summe aller Werte muss immer 100 sein.
+                    Output als JSON-Objekt mit den Kategorien und den jeweiligen Prozentwerten.
+                    Kategorien: {config.CATEGORIES}
+                """,
+            },
+            {
+                "role": "user",
+                "content": f"Lobbyregister Eintrag: {entry}",
+            },
+        ],
+        text_format=LobbyregisterEntryDistribution,
     )
 
     event = response.output_parsed
