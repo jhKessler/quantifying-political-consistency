@@ -1,4 +1,5 @@
 import re
+
 from src.utils import regex
 from src.votes.pdf import get_vote
 
@@ -11,5 +12,3 @@ def get_vote_title(vote_id: str) -> str:
                 "\s+", " ", " ".join(el[4] for el in blocks[index : (index + 3)])
             ).strip()
     raise ValueError(f"Title not found in {vote_id}")
-
-

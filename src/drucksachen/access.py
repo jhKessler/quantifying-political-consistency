@@ -1,10 +1,14 @@
 from pathlib import Path
-from src.utils.download import download_file
-from src.utils import pdf
+
 from loguru import logger
+
+from src.utils import pdf
+from src.utils.download import download_file
+
 
 def get_drucksache_path(drucksachen_id: str) -> str:
     return f"data/drucksachen/{drucksachen_id.replace('/', '_')}.pdf"
+
 
 def assert_drucksache_download(drucksachen_id: str):
     Path("data/drucksachen").mkdir(parents=True, exist_ok=True)

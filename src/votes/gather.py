@@ -7,7 +7,9 @@ import requests
 from bs4 import BeautifulSoup, ResultSet, Tag
 from loguru import logger
 from tqdm import tqdm
+
 from src.votes import config
+
 
 def get_votes_tablerows(start_offset: int, limit: int = 30) -> ResultSet:
     url = (

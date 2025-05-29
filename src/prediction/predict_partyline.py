@@ -1,14 +1,12 @@
-
-
+import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
-import re
-from langchain_chroma import Chroma
-from loguru import logger
-import pandas as pd
 from typing import TypedDict
 
+import pandas as pd
+from langchain_chroma import Chroma
+from loguru import logger
 from tqdm import tqdm
 
 from src.enums import VoteResultEnum
@@ -34,10 +32,12 @@ def get_correct_manifesto_year(
         )
         return None
 
+
 class VotePredictionResult(TypedDict):
     context: str
     reasoning: str
     decision: str | None
+
 
 def predict_vote(
     vote: pd.Series,
@@ -74,8 +74,13 @@ def predict_vote(
         decision = None
     return {"context": llm_context, "reasoning": decision_text, "decision": decision}
 
+
 def process(
-    idx: int, row: pd.Series, chroma_store: dict[str, Chroma], party: str, manifestos: pd.DataFrame
+    idx: int,
+    row: pd.Series,
+    chroma_store: dict[str, Chroma],
+    party: str,
+    manifestos: pd.DataFrame,
 ) -> tuple[int, VotePredictionResult | None]:
     try:
         return idx, predict_vote(row, chroma_store, party, manifestos)
@@ -84,14 +89,19 @@ def process(
         logger.exception(e)
         return idx, None
 
-def predict_partyline(party: str, votes: pd.DataFrame, manifestos: pd.DataFrame) -> list[VotePredictionResult]:
+
+def predict_partyline(
+    party: str, votes: pd.DataFrame, manifestos: pd.DataFrame
+) -> list[VotePredictionResult]:
     if not Path(f"{RESULT_CSV_FOLDER}/{party}.csv").exists():
-        raise FileNotFoundError(f"Results file for party {party} not found. Please run the prediction step first.")
-    
+        raise FileNotFoundError(
+            f"Results file for party {party} not found. Please run the prediction step first."
+        )
+
     manifestos = manifestos[manifestos["party"] == party]
     manifesto_chroma_db = get_rag_embeddings(party)
 
-    decisions = [None] * len(votes)    
+    decisions = [None] * len(votes)
     with (
         ThreadPoolExecutor(max_workers=config.THREADS) as pool,
         tqdm(total=len(votes)) as pbar,
@@ -100,7 +110,7 @@ def predict_partyline(party: str, votes: pd.DataFrame, manifestos: pd.DataFrame)
             pool.submit(process, i, row, manifesto_chroma_db, party, manifestos)
             for i, (_, row) in enumerate(votes.iterrows())
         ]
-        
+
         for future in as_completed(futures):
             i, decision = future.result()
             decisions[i] = decision

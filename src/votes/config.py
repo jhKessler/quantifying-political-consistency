@@ -8,9 +8,4 @@ MAX_CONTENT_CHARS = 58000 * 3  #
 
 EMBEDDING_MODEL = "text-embedding-3-small"
 
-RELEVANT_TYPES = [
-    "Gesetzentwurf",
-    "Beschlussempfehlung",
-    "Antrag",
-    "Änderungsantrag"
-]
+RELEVANT_TYPES = ["Gesetzentwurf", "Beschlussempfehlung", "Antrag", "Änderungsantrag"]

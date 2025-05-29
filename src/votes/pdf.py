@@ -1,9 +1,11 @@
 from pathlib import Path
 
-from src.utils.download import download_file
-from src.utils import pdf
-from loguru import logger
 import pandas as pd
+from loguru import logger
+
+from src.utils import pdf
+from src.utils.download import download_file
+
 
 def get_vote_path(vote_id: str) -> str:
     return f"data/votes/all/{vote_id}/result.pdf"

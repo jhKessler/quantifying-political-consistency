@@ -50,17 +50,18 @@ _PATTERN = re.compile(
 def is_title_start(first_page_text: str) -> bool:
     return _PATTERN.match(first_page_text)
 
+
 def regex_drucksachen_type(title: str) -> str:
     pattern = re.compile(
         rf"^\s*(?:{'|'.join(map(re.escape, COUNTS))})?\s*"
         rf"({'|'.join(map(re.escape, TYPES))})",
-        flags=re.IGNORECASE
+        flags=re.IGNORECASE,
     )
     m = pattern.match(title.strip())
     type_ = m.group(1) if m else None
     if not type_:
         raise ValueError(f"Type not found in {title}")
-    
+
     if type_.startswith("Beschlussempfehlung"):
         return "Beschlussempfehlung"
     if (
@@ -70,6 +71,7 @@ def regex_drucksachen_type(title: str) -> str:
     ):
         return "Gesetzentwurf"
     return type_.split()[0]
+
 
 def regex_drucksachen_ids(vote_name: str) -> list[str]:
     """

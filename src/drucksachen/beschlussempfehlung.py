@@ -1,12 +1,13 @@
-
 import re
 from typing import TypedDict
-from src.drucksachen.access import get_drucksache
+
 from loguru import logger
 
+from src.drucksachen.access import get_drucksache
 from src.drucksachen.parse import extract_title_from_drucksache
 from src.enums import VoteResultEnum
 from src.utils import regex
+
 
 def get_content(drucksache_id: str) -> str | None:
     blocks = get_drucksache(drucksache_id, opt="blocks")
@@ -29,6 +30,7 @@ class VoteEntry(TypedDict):
     vote: str
     drucksache_id: str
     beschlussempfehlung: str | None
+
 
 def parse(vote: str, drucksache_id: str) -> list[VoteEntry]:
     beschluss_pattern = re.compile(
@@ -54,11 +56,13 @@ def parse(vote: str, drucksache_id: str) -> list[VoteEntry]:
         logger.warning(f"No votes found in Beschlussempfehlung {drucksache_id}")
     return results
 
+
 class ParsedBeschlussempfehlung(TypedDict):
     vote_id: str
     type: str
     entrypoint_drucksache_title: str
     entrypoint_drucksache_id: str
+
 
 def build(vote_id: str, drucksache_id: str) -> list[dict]:
     underyling_votes = parse(vote_id, drucksache_id)
@@ -66,14 +70,18 @@ def build(vote_id: str, drucksache_id: str) -> list[dict]:
     for vote in underyling_votes:
         title = extract_title_from_drucksache(vote["drucksache_id"])
         type_ = regex.regex_drucksachen_type(title)
-        result.append({
-            "vote_id": vote["vote_id"],
-            "type": type_,
-            "entrypoint_drucksache_title": title,
-            "entrypoint_drucksache_id": vote["drucksache_id"],
-            "beschlussempfehlung": vote["beschlussempfehlung"]
-        })
+        result.append(
+            {
+                "vote_id": vote["vote_id"],
+                "type": type_,
+                "entrypoint_drucksache_title": title,
+                "entrypoint_drucksache_id": vote["drucksache_id"],
+                "beschlussempfehlung": vote["beschlussempfehlung"],
+            }
+        )
     if not result:
-        logger.warning(f"No underlying votes found for {vote_id} with drucksache {drucksache_id}.")
+        logger.warning(
+            f"No underlying votes found for {vote_id} with drucksache {drucksache_id}."
+        )
 
     return result

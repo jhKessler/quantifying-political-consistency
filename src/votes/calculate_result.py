@@ -68,17 +68,21 @@ def append_vote_results(xls_path: str, vote_id: str) -> None:
         new_row = pd.Series(
             {
                 "vote_id": vote_id,
-                VoteResultEnum.ANNAHME.value: by_party.loc[party, VoteResultEnum.ANNAHME.value],
-                VoteResultEnum.ABLEHNUNG.value: by_party.loc[party, VoteResultEnum.ABLEHNUNG.value],
-                VoteResultEnum.ENTHALTUNG.value: by_party.loc[party, VoteResultEnum.ENTHALTUNG.value],
+                VoteResultEnum.ANNAHME.value: by_party.loc[
+                    party, VoteResultEnum.ANNAHME.value
+                ],
+                VoteResultEnum.ABLEHNUNG.value: by_party.loc[
+                    party, VoteResultEnum.ABLEHNUNG.value
+                ],
+                VoteResultEnum.ENTHALTUNG.value: by_party.loc[
+                    party, VoteResultEnum.ENTHALTUNG.value
+                ],
             }
         )
         new_row.to_frame().T.to_csv(party_path, mode="a", header=False, index=False)
 
 
-def calculate_vote_result(
-    vote_id: str, xls_url: str
-) -> VoteResult:
+def calculate_vote_result(vote_id: str, xls_url: str) -> VoteResult:
     Path(config.RESULT_CSV_FOLDER).mkdir(parents=True, exist_ok=True)
     Path(f"data/votes/all/{vote_id}").mkdir(parents=True, exist_ok=True)
 

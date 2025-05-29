@@ -1,11 +1,13 @@
 from pathlib import Path
-from tqdm import tqdm
+
 import pandas as pd
-from src.utils.download import download_file
 from loguru import logger
-from src.utils import pdf
-from src.utils.llm import openai_client, prompts
+from tqdm import tqdm
+
 from src.manifestos import config
+from src.utils import pdf
+from src.utils.download import download_file
+from src.utils.llm import openai_client, prompts
 
 
 def download_manifestos():
@@ -30,14 +32,11 @@ def download_manifestos():
     ) as pbar:
         for _, row in manifestos.iterrows():
             pbar.update(1)
-            mask = (
-                (already_downloaded["party"] == row["party"])
-                & (already_downloaded["year"] == row["year"])
+            mask = (already_downloaded["party"] == row["party"]) & (
+                already_downloaded["year"] == row["year"]
             )
             if mask.any():
-                output.append(
-                    already_downloaded[mask].iloc[0].to_dict()
-                )
+                output.append(already_downloaded[mask].iloc[0].to_dict())
                 logger.info(
                     f"Manifesto for {row['party']} {row['year']} already downloaded. Skipping."
                 )

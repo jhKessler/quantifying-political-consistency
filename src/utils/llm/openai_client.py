@@ -1,12 +1,15 @@
 from typing import List
+
 from dotenv import load_dotenv
 from openai import OpenAI
 from pydantic import BaseModel
+
 from src.utils.llm import prompts
 from src.votes import config
 
 load_dotenv()
 client = OpenAI()
+
 
 def prompt_openai(system_prompt: str, text: str, model: str = "gpt-4.1-mini") -> str:
     response = client.chat.completions.create(
@@ -17,6 +20,7 @@ def prompt_openai(system_prompt: str, text: str, model: str = "gpt-4.1-mini") ->
         model=model,
     )
     return response.choices[0].message.content
+
 
 class MatchingTitle(BaseModel):
     index: int

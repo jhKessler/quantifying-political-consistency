@@ -1,9 +1,12 @@
-from pathlib import Path
-import requests
-from src.utils.pdf import extract_first_page
-from loguru import logger
-import pandas as pd
 import time
+from pathlib import Path
+
+import pandas as pd
+import requests
+from loguru import logger
+
+from src.utils.pdf import extract_first_page
+
 
 def download_file(fileurl: str, save_to_path: str, delay: int = 0.5) -> None:
     """
@@ -28,7 +31,7 @@ def download_file(fileurl: str, save_to_path: str, delay: int = 0.5) -> None:
         for chunk in r.iter_content(chunk_size=1024):
             if chunk:
                 f.write(chunk)
-    
+
     time.sleep(delay)  # Delay to avoid overwhelming the server
 
     if save_to_path.endswith(".pdf"):

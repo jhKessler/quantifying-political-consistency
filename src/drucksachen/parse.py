@@ -1,7 +1,7 @@
 import re
+
 from src.drucksachen.access import get_drucksache
 from src.utils import regex
-import re
 
 
 def extract_title_from_drucksache(drucksachen_id: str) -> str:

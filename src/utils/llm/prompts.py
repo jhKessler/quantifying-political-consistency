@@ -1,6 +1,3 @@
-
-
-
 SUMMARIZE_MANIFESTO = """
     Filtere aus dem folgenden Text jegliche Informationen heraus, aus denen ersichtlich ist, von welcher Partei das Wahlprogramm stammt.
     Das Ergebnis soll eine Liste von Punkten sein, welche die wichtigsten Punkte des Wahlprogramms zusammenfassen, ohne Namen einzelner Personen oder Parteien zu nennen.

@@ -1,6 +1,7 @@
+from loguru import logger
 
 from src.drucksachen.access import get_drucksache
-from loguru import logger
+
 
 def _scan_for_intro(
     blocks, start_mark: str, end_mark: str | None, start_at_index: int | None = None

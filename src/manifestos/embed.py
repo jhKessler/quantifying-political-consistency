@@ -1,10 +1,10 @@
 from pathlib import Path
 
-from loguru import logger
 import pandas as pd
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
 from langchain_openai import OpenAIEmbeddings
+from loguru import logger
 
 from src.config import EMBEDDING_MODEL, PARTIES
 from src.manifestos import config
@@ -31,5 +31,5 @@ def get_rag_embeddings(party: str) -> dict[str, Chroma]:
             vs = Chroma.from_documents(
                 docs, embeddings, persist_directory=str(store_path)
             )
-            vectorstores[row['year']] = vs
+            vectorstores[row["year"]] = vs
     return vectorstores

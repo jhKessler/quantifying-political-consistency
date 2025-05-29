@@ -1,14 +1,14 @@
 from pathlib import Path
 
 import pandas as pd
-
-from src import config
 from loguru import logger
 
+from src import config
 from src.feature_engineering.categories import get_category_column
 from src.feature_engineering.mirror_beschlussempfehlung import prepare_final_dataset
 from src.prediction.config import PREDICTIONS_OUTPUT_PATH
 from src.prediction.predict_partyline import predict_partyline
+
 
 def load_manifestos():
     if not Path("output/cleaned_manifestos.parquet").exists():
@@ -34,7 +34,6 @@ def load_votes():
     return votes
 
 
-
 def run_prediction():
     votes = load_votes()
     manifestos = load_manifestos()
@@ -52,10 +51,11 @@ def run_prediction():
         if all_predictions is None:
             all_predictions = party_votes
         else:
-            all_predictions = pd.concat([all_predictions, party_votes], ignore_index=True)
+            all_predictions = pd.concat(
+                [all_predictions, party_votes], ignore_index=True
+            )
 
     all_predictions.to_parquet(PREDICTIONS_OUTPUT_PATH, index=False)
     dataset = prepare_final_dataset()
     dataset["category"] = get_category_column(dataset["summary_embedding"])
     dataset.to_parquet("output/predictions.parquet", index=False)
-

@@ -1,10 +1,11 @@
 import re
-import pandas as pd
-import requests
-from tqdm import tqdm
 from time import sleep
+
+import pandas as pd
 import pymupdf
+import requests
 from loguru import logger
+from tqdm import tqdm
 
 
 def extract_first_page(pdf_path: str, opt="text"):

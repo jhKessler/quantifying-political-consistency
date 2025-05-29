@@ -1,4 +1,3 @@
-
 CATEGORIES = [
     "Finanzen - Steuern, Staatsbudget, Haushalts- und Finanzpolitik",
     "Inneres & Migration - Innere Sicherheit, öffentliche Verwaltung, Migration, Staatsbürgerschaft",
