@@ -12,8 +12,8 @@ def get_vote_path(vote_id: str) -> str:
 
 
 def assert_vote_download(vote: pd.Series):
-    Path(f"data/votes/pdf/{vote['id']}/result.pdf").mkdir(parents=True, exist_ok=True)
-    filename = f"data/tmp/votes/{vote['id']}.pdf"
+    filename = get_vote_path(vote["id"])
+    Path(f"data/votes/pdf/{vote['id']}").mkdir(parents=True, exist_ok=True)
     if Path(filename).exists():
         return
     download_file(vote["pdf_url"], filename)

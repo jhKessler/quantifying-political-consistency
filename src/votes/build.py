@@ -51,6 +51,7 @@ def download_vote_documents(vote: pd.Series) -> pd.DataFrame:
 
 def build_vote(row: pd.Series) -> VoteEntrypointDict:
     # Calculate the voting result for each vote
+    Path(f"data/votes/all/{row['vote_id']}").mkdir(parents=True, exist_ok=True)
     download_file(row["pdf_url"], get_vote_path(row["vote_id"]))
     calculate_vote_result(row["vote_id"], row["xls_url"])
 
@@ -88,7 +89,7 @@ def build_entrypoints(force_regenerate: bool = False) -> pd.DataFrame:
     entrypoints: VoteEntrypointDict = []
     with tqdm(
         total=len(urls),
-        desc="Calculating vote results",
+        desc="Building vote entrypoints",
         unit="vote",
     ) as pbar:
         for _, row in urls.iterrows():

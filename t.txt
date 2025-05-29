@@ -41,7 +41,7 @@ etnscheidungen:
 die parteivorsätze ändern sich dann wenn das neue parteiprogramm beschlossen wird, nicht wenn der neue bundestag gebildet wurde
 es ist wichtig aus sowlh den wahlprogrammen und den gesetzesentwürfen/anträgen den parteinamen rauszufiltern damit das llm nicht bias wird wenn es die partei weiß
 damit es nur um inhalte geht
-
+wichtig sich auf die konkreten maßnahmen zu konzentrieren anstatt auf die ziele
 
 fragen:
 gibt es unterschied zwischen wahlrpgramm und voting , nach kategorie? danach wie eine andere partei voted?

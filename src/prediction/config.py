@@ -1,5 +1,5 @@
 THREADS = 16
-DEEPSEEK_MODEL = "deepseek-reasoner"
+DEEPSEEK_MODEL = "deepseek-chat"
 
 SIMILARITY_K = 5
 
