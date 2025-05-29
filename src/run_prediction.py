@@ -5,6 +5,7 @@ from loguru import logger
 
 from src import config
 from src.feature_engineering.categories import get_category_column
+from src.feature_engineering.legislature_period import get_legislature_period_metadata
 from src.feature_engineering.mirror_beschlussempfehlung import prepare_final_dataset
 from src.prediction.config import PREDICTIONS_OUTPUT_PATH
 from src.prediction.predict_partyline import predict_partyline
@@ -58,4 +59,16 @@ def run_prediction():
     all_predictions.to_parquet(PREDICTIONS_OUTPUT_PATH, index=False)
     dataset = prepare_final_dataset()
     dataset["category"] = get_category_column(dataset["summary_embedding"])
+
+    dataset["metadata"] = dataset.apply(
+        lambda row: get_legislature_period_metadata(row["party"], row["date"]), axis=1
+    )
+    dataset[[
+        "is_governing",
+        "bundestag",
+    ]] = dataset["metadata"].apply(pd.Series)
+    dataset.drop(columns=["metadata"], inplace=True)
+
+    dataset["vote_correct"] = dataset["prediction"] == dataset["ground_truth"]
+
     dataset.to_parquet("output/predictions.parquet", index=False)
