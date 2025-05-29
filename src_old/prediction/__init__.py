@@ -1,1 +1,0 @@
-from .main import predict_party_votes
