@@ -10,6 +10,10 @@ def check_required_files():
         {
             "path": "input/manifestos.csv",
             "description": "Manifestos CSV file containing urls to party manifestos.",
+        },
+        {
+            "path": "input/sonntagsfragen.xlsx",
+            "description": "Excel file containing poll data.",
         }
     ]
     for file in required_files:

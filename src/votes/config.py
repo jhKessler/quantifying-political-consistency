@@ -9,3 +9,14 @@ MAX_CONTENT_CHARS = 58000 * 3  #
 EMBEDDING_MODEL = "text-embedding-3-small"
 
 RELEVANT_TYPES = ["Gesetzentwurf", "Beschlussempfehlung", "Antrag", "Änderungsantrag"]
+
+
+PROPOSERS = {
+    "Union (CDU/CSU)": "Union",
+    "SPD": "SPD",
+    "FDP": "FDP",
+    "BÜNDNIS 90/DIE GRÜNEN": "DIE_GRÜNEN",
+    "DIE LINKE": "DIE_LINKE",
+    "AfD": "AfD",
+    "Bundesregierung": "Bundesregierung"
+}

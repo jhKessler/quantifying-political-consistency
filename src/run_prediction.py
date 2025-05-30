@@ -7,8 +7,10 @@ from src import config
 from src.feature_engineering.categories import get_category_column
 from src.feature_engineering.legislature_period import get_legislature_period_metadata
 from src.feature_engineering.mirror_beschlussempfehlung import prepare_final_dataset
+from src.feature_engineering.polls import add_polling_data
 from src.prediction.config import PREDICTIONS_OUTPUT_PATH
 from src.prediction.predict_partyline import predict_partyline
+from src.votes.config import OUTPUT_PARQUET_PATH
 
 
 def load_manifestos():
@@ -24,11 +26,11 @@ def load_manifestos():
 
 
 def load_votes():
-    if not Path("output/votes.parquet").exists():
+    if not Path(OUTPUT_PARQUET_PATH).exists():
         raise FileNotFoundError(
             "Votes data not found. Please run the preprocessing step first."
         )
-    votes = pd.read_parquet("output/votes.parquet")
+    votes = pd.read_parquet(OUTPUT_PARQUET_PATH)
     votes["date"] = pd.to_datetime(
         votes["vote_id"].str.split("_").str[0], format="%Y%m%d"
     )
@@ -69,6 +71,5 @@ def run_prediction():
     ]] = dataset["metadata"].apply(pd.Series)
     dataset.drop(columns=["metadata"], inplace=True)
 
-    dataset["vote_correct"] = dataset["prediction"] == dataset["ground_truth"]
-
+    dataset["vote_correct"] = (dataset["prediction"] == dataset["ground_truth"])
     dataset.to_parquet("output/predictions.parquet", index=False)

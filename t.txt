@@ -6,36 +6,6 @@ ballot: eine einzige Stimme, die abgegeben wird
 manifesto: Wahlprogramm, das die politischen Ziele einer Partei beschreibt
 
 
-
-
-
-
-
-pipeline:
-
-
-gesetzesentwurf zusammenfassen -> änderungsanträge zusammenfassen
-
-
-
-vote -> herausfinden über welche drucksache genau abgestimmt wird (erstgenannte drucksache)
-
-wie? llm kriegt die erste seite und soll dann anhand einer liste der verbundenen drucksachen und deren titel herausfinden worüber abgestimmt wird, und returned dann den pfad, bzw die pfade falls mehrere drucksachen relevant sind
-
-schauen welche art:
-änderungsantrag (dann zusammenfassen von NUR dem änderungsantrag)
-gesetzesentwurf (dann zusammenfassen von gesetzesentwurf)
-entschließungsantrag (ignorieren, da keine rechtswirkung und schwierig zu modellieren)
-beschlussempfehlung (schauen ob die empfehlung für oder gegen den gesetzesentwurf ist, dann zusammenfassen des gesetzesentwurfes und evtl negierung des ergebnisses, je nachdem was die empfehlung ist)
-antrag (wird gleich behandelt wie ein gesetzesentwurf, auch wenn es keine gesetzliche Wirkung hat)
-
-llm das folgendes macht:
-
-vergleicht titel der des main dokuments mit allen drucksachentiteln, sucht das richtige aus
-und gibt den pfad zurück
-
-
-
 etnscheidungen:
 
 die parteivorsätze ändern sich dann wenn das neue parteiprogramm beschlossen wird, nicht wenn der neue bundestag gebildet wurde
@@ -44,9 +14,13 @@ damit es nur um inhalte geht
 wichtig sich auf die konkreten maßnahmen zu konzentrieren anstatt auf die ziele
 
 fragen:
-gibt es unterschied zwischen wahlrpgramm und voting , nach kategorie? danach wie eine andere partei voted?
 unterschied nach typ? bschlussempfelung, antrag, gesetzentwurf?
 korrelation mit umfrageergebnissen?
 beschlussempfehlungen wo parteien teilweise gegen wahlprogramm stimmen: deal zwischen parteien?
 unterschied zwischen zustimmung/ablehnung?
 wann enthalten sich die parteien?
+
+
+stimmen die parteien kurz vor einer wahl anders ab?=
+
+hinzufügen von welcher partei ein antrag gestellt wurde um zu checken ob der regierungs/oppositions unterschied daran liegt das die regierung mehr anträge stellt und deswegen überrepresentiert sind

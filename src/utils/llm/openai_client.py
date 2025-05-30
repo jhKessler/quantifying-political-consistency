@@ -51,3 +51,24 @@ def match_drucksache_to_vote(
 def get_embedding(text: str, model=config.EMBEDDING_MODEL) -> list[float]:
     response = client.embeddings.create(input=text, model=model)
     return response.data[0].embedding
+
+
+
+class VoteProposers(BaseModel):
+    proposers: List[str]
+
+
+def get_proposer(
+    vote_title: str
+) -> VoteProposers:
+    response = client.responses.parse(
+        model="gpt-4.1-mini",
+        input=[
+            {"role": "system", "content": prompts.GET_PROPOSER},
+            {"role": "user", "content": f"Vote title: {vote_title}"},
+        ],
+        text_format=VoteProposers,
+    )
+
+    event = response.output_parsed.proposers
+    return event

@@ -174,6 +174,22 @@ def filter_votes_by_content(all_votes: pd.DataFrame) -> pd.DataFrame:
     return all_votes
 
 
+def clean_proposers(proposers: list[str]):
+    outp = []
+    for proposer in proposers:
+        try:
+            outp.append(config.PROPOSERS[proposer])
+        except KeyError:
+            logger.warning(f"Unknown proposer: {proposer}")
+    return outp
+
+
+def is_own_proposal(row: pd.Series):
+    if row["party"] in row["proposers"]:
+        return True
+    return row["is_governing"] and "Bundesregierung" in row["proposers"]
+
+
 def build():
     tqdm.pandas()
 
@@ -196,5 +212,10 @@ def build():
     all_votes["date"] = pd.to_datetime(
         all_votes["vote_id"].str.split("_").str[0], format="%Y%m%d"
     )
+    all_votes["proposers"] = all_votes["drucksache_title"].progress_apply(
+        openai_client.get_proposer
+    )
+    all_votes["proposers"] = all_votes["proposers"].apply(clean_proposers)
+    all_votes["is_own_proposal"] = all_votes.apply(is_own_proposal, axis=1)
     logger.info("Saving data to parquet...")
     all_votes.to_parquet(config.OUTPUT_PARQUET_PATH, index=False)
