@@ -10,6 +10,7 @@ from src.feature_engineering.mirror_beschlussempfehlung import prepare_final_dat
 from src.feature_engineering.polls import add_polling_data
 from src.prediction.config import PREDICTIONS_OUTPUT_PATH
 from src.prediction.predict_partyline import predict_partyline
+from src.votes.build import is_own_proposal
 from src.votes.config import OUTPUT_PARQUET_PATH
 
 
@@ -72,4 +73,6 @@ def run_prediction():
     dataset.drop(columns=["metadata"], inplace=True)
 
     dataset["vote_correct"] = (dataset["prediction"] == dataset["ground_truth"])
+    dataset["is_own_proposal"] = dataset.apply(is_own_proposal, axis=1)
+
     dataset.to_parquet("output/predictions.parquet", index=False)

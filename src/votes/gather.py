@@ -45,7 +45,7 @@ def parse_vote_row(vote_element: Tag) -> dict:
     abstimmungs_id = "_".join(match.groups()) if number else day
 
     return {
-        "vote_id": abstimmungs_id,
+        "vote_num": abstimmungs_id,
         "xls_url": xls_link or None,
         "pdf_url": pdf_link or None,
     }
@@ -82,4 +82,7 @@ def scrape_urls(limit: int = 30, sleep_duration: float = 0.5) -> list[dict]:
                     )
 
     logger.info(f"Gathered {len(data)} votes.")
-    pd.DataFrame(data).to_parquet(config.URLS_PARQUET_PATH, index=False)
+    urls = pd.DataFrame(data)
+    urls.drop_duplicates(subset=["vote_num", "xls_url", "pdf_url"], inplace=True)
+    urls = urls.reset_index(names="vote_id")
+    urls.to_parquet(config.URLS_PARQUET_PATH, index=False)

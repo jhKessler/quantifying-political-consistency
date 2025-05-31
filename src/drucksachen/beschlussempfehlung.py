@@ -32,7 +32,7 @@ class VoteEntry(TypedDict):
     beschlussempfehlung: str | None
 
 
-def parse(vote: str, drucksache_id: str) -> list[VoteEntry]:
+def parse(vote_id: str, drucksache_id: str) -> list[VoteEntry]:
     beschluss_pattern = re.compile(
         r"Drucksache\s+(\d+/\d+)"
         r"(?:\s+(?!anzunehmen|abzulehnen)[A-Za-zÄÖÜäöüß]+)*"
@@ -45,7 +45,7 @@ def parse(vote: str, drucksache_id: str) -> list[VoteEntry]:
     for druck_id, action in beschluss_pattern.findall(text):
         results.append(
             {
-                "vote_id": vote,
+                "vote_id": vote_id,
                 "drucksache_id": druck_id,
                 "beschlussempfehlung": VoteResultEnum.ANNAHME.value
                 if action == "anzunehmen"
@@ -64,7 +64,7 @@ class ParsedBeschlussempfehlung(TypedDict):
     entrypoint_drucksache_id: str
 
 
-def build(vote_id: str, drucksache_id: str) -> list[dict]:
+def build(vote_id: str, vote_num: str, drucksache_id: str) -> list[dict]:
     underyling_votes = parse(vote_id, drucksache_id)
     result = []
     for vote in underyling_votes:
@@ -72,7 +72,8 @@ def build(vote_id: str, drucksache_id: str) -> list[dict]:
         type_ = regex.regex_drucksachen_type(title)
         result.append(
             {
-                "vote_id": vote["vote_id"],
+                "vote_id": vote_id,
+                "vote_num": vote_num,
                 "type": type_,
                 "entrypoint_drucksache_title": title,
                 "entrypoint_drucksache_id": vote["drucksache_id"],

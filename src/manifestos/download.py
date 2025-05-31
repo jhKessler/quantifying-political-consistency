@@ -16,7 +16,7 @@ def download_manifestos():
     output_path = Path(config.CLEANED_PARQUET_PATH)
 
     already_downloaded = (
-        pd.read_parquet(output_path)
+        pd.read_parquet(config.CLEANED_PARQUET_PATH)
         if output_path.exists()
         else pd.DataFrame(
             columns=["party", "year", "summary", "raw_text", "valid_starting"]

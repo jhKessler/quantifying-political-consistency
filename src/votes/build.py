@@ -62,6 +62,7 @@ def build_vote(row: pd.Series) -> VoteEntrypointDict:
         logger.warning(f"No drucksachen found for vote {row['vote_id']}.")
         return {
             "vote_id": row["vote_id"],
+            "vote_num": row["vote_num"],
             "title": vote_title,
             "type": vote_type,
             "entrypoint_drucksache_title": None,
@@ -71,6 +72,7 @@ def build_vote(row: pd.Series) -> VoteEntrypointDict:
 
     return {
         "vote_id": row["vote_id"],
+        "vote_num": row["vote_num"],
         "title": vote_title,
         "type": vote_type,
         "entrypoint_drucksache_title": entrypoint["entrypoint_drucksache_title"],
@@ -84,6 +86,7 @@ def build_entrypoints(force_regenerate: bool = False) -> pd.DataFrame:
         return pd.read_parquet(config.ENTRYPOINTS_PARQUET_PATH)
 
     urls = pd.read_parquet(config.URLS_PARQUET_PATH)
+
 
     logger.info("Calculating vote results...")
     entrypoints: VoteEntrypointDict = []
@@ -107,7 +110,7 @@ def build_entrypoints(force_regenerate: bool = False) -> pd.DataFrame:
 def process_beschlussempfehlungen(beschlussempfehlungen: pd.DataFrame) -> pd.DataFrame:
     underlying = beschlussempfehlungen.apply(
         lambda row: beschlussempfehlung.build(
-            row["vote_id"], row["entrypoint_drucksache_id"]
+            row["vote_id"], row["vote_num"], row["entrypoint_drucksache_id"]
         ),
         axis=1,
     )
@@ -123,7 +126,7 @@ def process_beschlussempfehlungen(beschlussempfehlungen: pd.DataFrame) -> pd.Dat
 
 def clean_entrypoints(entrypoints: pd.DataFrame) -> pd.DataFrame:
     entrypoints = entrypoints[
-        ["vote_id", "type", "entrypoint_drucksache_title", "entrypoint_drucksache_id"]
+        ["vote_id", "vote_num", "type", "entrypoint_drucksache_title", "entrypoint_drucksache_id"]
     ].rename(
         columns={
             "entrypoint_drucksache_title": "drucksache_title",
@@ -146,6 +149,9 @@ def combine_entrypoints_and_beschlussempfehlungen(
     )
     all_votes = pd.concat([entrypoints, beschlussempfehlungen])
     all_votes = all_votes[all_votes["type"].isin(config.RELEVANT_TYPES)]
+    all_votes.drop_duplicates(
+        subset=["vote_id", "drucksache_id"], inplace=True
+    )
     return all_votes
 
 
@@ -210,12 +216,13 @@ def build():
         openai_client.get_embedding
     )
     all_votes["date"] = pd.to_datetime(
-        all_votes["vote_id"].str.split("_").str[0], format="%Y%m%d"
+        all_votes["vote_num"].str.split("_").str[0], format="%Y%m%d"
     )
+    logger.info("Extracting vote proposers...")
     all_votes["proposers"] = all_votes["drucksache_title"].progress_apply(
         openai_client.get_proposer
     )
     all_votes["proposers"] = all_votes["proposers"].apply(clean_proposers)
-    all_votes["is_own_proposal"] = all_votes.apply(is_own_proposal, axis=1)
     logger.info("Saving data to parquet...")
+    all_votes.drop(columns="vote_num", inplace=True)
     all_votes.to_parquet(config.OUTPUT_PARQUET_PATH, index=False)

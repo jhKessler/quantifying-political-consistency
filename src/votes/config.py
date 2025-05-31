@@ -18,5 +18,6 @@ PROPOSERS = {
     "BÜNDNIS 90/DIE GRÜNEN": "DIE_GRÜNEN",
     "DIE LINKE": "DIE_LINKE",
     "AfD": "AfD",
-    "Bundesregierung": "Bundesregierung"
+    "Bundesregierung": "Bundesregierung",
+    "Bundesrat": "Bundesrat",
 }
