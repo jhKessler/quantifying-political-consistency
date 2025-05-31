@@ -7,7 +7,6 @@ from src import config
 from src.feature_engineering.categories import get_category_column
 from src.feature_engineering.legislature_period import get_legislature_period_metadata
 from src.feature_engineering.mirror_beschlussempfehlung import prepare_final_dataset
-from src.feature_engineering.polls import add_polling_data
 from src.prediction.config import PREDICTIONS_OUTPUT_PATH
 from src.prediction.predict_partyline import predict_partyline
 from src.votes.build import is_own_proposal
@@ -33,12 +32,12 @@ def load_votes():
         )
     votes = pd.read_parquet(OUTPUT_PARQUET_PATH)
     votes["date"] = pd.to_datetime(
-        votes["vote_id"].str.split("_").str[0], format="%Y%m%d"
+        votes["date"], format="%Y-%m-%d"
     )
     return votes
 
 
-def run_prediction():
+def run_prediction(name: str):
     votes = load_votes()
     manifestos = load_manifestos()
 
@@ -66,13 +65,17 @@ def run_prediction():
     dataset["metadata"] = dataset.apply(
         lambda row: get_legislature_period_metadata(row["party"], row["date"]), axis=1
     )
-    dataset[[
-        "is_governing",
-        "bundestag",
-    ]] = dataset["metadata"].apply(pd.Series)
+    dataset[
+        [
+            "is_governing",
+            "bundestag",
+        ]
+    ] = dataset["metadata"].apply(pd.Series)
     dataset.drop(columns=["metadata"], inplace=True)
 
-    dataset["vote_correct"] = (dataset["prediction"] == dataset["ground_truth"])
+    dataset["vote_correct"] = dataset["prediction"] == dataset["ground_truth"]
     dataset["is_own_proposal"] = dataset.apply(is_own_proposal, axis=1)
+    dataset["manifesto_context"] = dataset["reasoning"].str["context"]
+    dataset["reasoning"] = dataset["reasoning"].str["reasoning"]
 
-    dataset.to_parquet("output/predictions.parquet", index=False)
+    dataset.to_parquet(f"output/predictions_{name}.parquet", index=False)
