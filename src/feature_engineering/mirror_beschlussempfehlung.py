@@ -32,11 +32,15 @@ def build_party_df(party: str) -> pd.DataFrame:
     df = pd.read_csv(f"{RESULT_CSV_FOLDER}/{party}.csv")
     df["ground_truth"] = df.apply(vote_counts_to_result, axis=1)
     df["party"] = party
-    return df[["vote_id", "ground_truth", "party"]]
+    sums = df[["Annahme", "Ablehnung", "Enthaltung"]].sum(axis=1)
+    max_vals = df[["Annahme", "Ablehnung", "Enthaltung"]].max(axis=1)
+    df["discipline"] = max_vals / sums
+    return df[["vote_id", "ground_truth", "party", "discipline"]]
 
 
 def load_party_results() -> pd.DataFrame:
     party_results = [build_party_df(party) for party in config.PARTIES]
+
     return pd.concat(party_results, ignore_index=True)
 
 

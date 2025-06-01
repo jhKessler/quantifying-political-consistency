@@ -12,7 +12,7 @@ from tqdm import tqdm
 from src.enums import VoteResultEnum
 from src.manifestos.embed import get_rag_embeddings
 from src.prediction import config
-from src.utils.llm import deepseek_client
+from src.utils.llm import deepseek_client, openai_client
 from src.votes.config import RESULT_CSV_FOLDER
 
 
@@ -54,13 +54,13 @@ def predict_vote(
     )
 
     llm_context = "\n".join([doc.page_content for doc in results])
-    decision_text = deepseek_client.prompt_deepseek(
+    decision_text = openai_client.prompt_openai(
         system_prompt=config.PREDICTION_PROMPT,
         text=f"""
             Wahlprogramm: {llm_context} 
             Antrag: {vote["summary"]}
         """,
-        model=config.DEEPSEEK_MODEL,
+        model="gpt-4.1-mini",
     )
     cleaned = re.sub(r"[^a-zA-Zä ]", "", decision_text).strip()
     if cleaned.startswith("stimmt nicht zu"):
