@@ -60,7 +60,7 @@ def predict_vote(
             Wahlprogramm: {llm_context} 
             Antrag: {vote["summary"]}
         """,
-        model="gpt-4.1-mini",
+        model="gpt-5",
     )
     cleaned = re.sub(r"[^a-zA-Zä ]", "", decision_text).strip()
     if cleaned.startswith("stimmt nicht zu"):
@@ -95,7 +95,7 @@ def predict_partyline(
 ) -> list[VotePredictionResult]:
     if not Path(f"{RESULT_CSV_FOLDER}/{party}.csv").exists():
         raise FileNotFoundError(
-            f"Results file for party {party} not found. Please run the prediction step first."
+            f"Results file for party {party} not found. Please run the preprocessing step first."
         )
 
     manifestos = manifestos[manifestos["party"] == party]
