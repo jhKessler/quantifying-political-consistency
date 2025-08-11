@@ -1,9 +1,10 @@
 from pathlib import Path
-
+import argparse
 import pandas as pd
 from loguru import logger
 
 from src import config
+from src.enums import APIProviderEnum
 from src.feature_engineering.categories import get_category_column
 from src.feature_engineering.legislature_period import get_legislature_period_metadata
 from src.feature_engineering.mirror_beschlussempfehlung import prepare_final_dataset
@@ -37,7 +38,7 @@ def load_votes():
     return votes
 
 
-def run_prediction(name: str):
+def run_prediction(name: str, api_provider: APIProviderEnum, model: str = "gpt-4.1") -> None:
     votes = load_votes()
     manifestos = load_manifestos()
 
@@ -47,7 +48,7 @@ def run_prediction(name: str):
         logger.info(f"Processing party: {party}")
         party_votes = votes.copy()
         party_votes["party"] = party
-        party_votes["reasoning"] = predict_partyline(party, votes, manifestos)
+        party_votes["reasoning"] = predict_partyline(party, votes, manifestos, api_provider, model)
         party_votes = party_votes[party_votes["reasoning"].notna()]
         party_votes["prediction"] = party_votes["reasoning"].str["decision"]
 
@@ -79,3 +80,30 @@ def run_prediction(name: str):
     dataset["reasoning"] = dataset["reasoning"].str["reasoning"]
 
     dataset.to_parquet(f"output/predictions_{name}.parquet", index=False)
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Run party-line prediction pipeline.")
+    parser.add_argument(
+        "--name",
+        required=True,
+        help="Name for the predictions file (written to output/predictions_<name>.parquet).",
+    )
+    parser.add_argument(
+        "--api-provider",
+        choices=["openai", "deepseek"],
+        default="openai",
+        help="API provider to use.",
+    )
+    parser.add_argument(
+        "--model",
+        default="gpt-4.1",
+        help="Model identifier to use with the selected API provider.",
+    )
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    provider = APIProviderEnum[args.api_provider]
+    run_prediction(args.name, provider, args.model)

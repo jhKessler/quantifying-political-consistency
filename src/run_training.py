@@ -96,3 +96,7 @@ def run_training():
     test_data = processed[processed["vote_id"].isin(test_ids)]
     train_model(train_data)
     test_data.to_parquet("output/xgboost_test_data.parquet", index=False)
+
+
+if __name__ == "__main__":
+    run_training()

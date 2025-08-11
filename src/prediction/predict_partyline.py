@@ -9,7 +9,7 @@ from langchain_chroma import Chroma
 from loguru import logger
 from tqdm import tqdm
 
-from src.enums import VoteResultEnum
+from src.enums import APIProviderEnum, VoteResultEnum
 from src.manifestos.embed import get_rag_embeddings
 from src.prediction import config
 from src.utils.llm import deepseek_client, openai_client
@@ -44,6 +44,8 @@ def predict_vote(
     chroma_store: dict[str, Chroma],
     party: str,
     manifestos: pd.DataFrame,
+    api_provider: APIProviderEnum,
+    model: str
 ) -> VotePredictionResult | None:
     relevant_year = get_correct_manifesto_year(vote["date"], party, manifestos)
     if relevant_year is None:
@@ -54,14 +56,25 @@ def predict_vote(
     )
 
     llm_context = "\n".join([doc.page_content for doc in results])
-    decision_text = openai_client.prompt_openai(
-        system_prompt=config.PREDICTION_PROMPT,
-        text=f"""
-            Wahlprogramm: {llm_context} 
-            Antrag: {vote["summary"]}
-        """,
-        model="gpt-5",
-    )
+
+    if api_provider == APIProviderEnum.OPENAI:
+        decision_text = openai_client.prompt_openai(
+            system_prompt=config.PREDICTION_PROMPT,
+            text=f"""
+                Wahlprogramm: {llm_context} 
+                Antrag: {vote["summary"]}
+            """,
+            model=model,
+        )
+    elif api_provider == APIProviderEnum.DEEPSEEK:
+        decision_text = deepseek_client.prompt_deepseek(
+            system_prompt=config.PREDICTION_PROMPT,
+            text=f"""
+                Wahlprogramm: {llm_context} 
+                Antrag: {vote["summary"]}
+            """,
+            model=model,
+        )
     cleaned = re.sub(r"[^a-zA-Zä ]", "", decision_text).strip()
     if cleaned.startswith("stimmt nicht zu"):
         decision = VoteResultEnum.ABLEHNUNG.value
@@ -81,9 +94,11 @@ def process(
     chroma_store: dict[str, Chroma],
     party: str,
     manifestos: pd.DataFrame,
+    api_provider: APIProviderEnum,
+    model: str
 ) -> tuple[int, VotePredictionResult | None]:
     try:
-        return idx, predict_vote(row, chroma_store, party, manifestos)
+        return idx, predict_vote(row, chroma_store, party, manifestos, api_provider, model)
     except Exception as e:
         logger.error(f"Error processing row: {row['vote_id']}")
         logger.exception(e)
@@ -91,7 +106,7 @@ def process(
 
 
 def predict_partyline(
-    party: str, votes: pd.DataFrame, manifestos: pd.DataFrame
+    party: str, votes: pd.DataFrame, manifestos: pd.DataFrame, api_provider: APIProviderEnum, model: str
 ) -> list[VotePredictionResult]:
     if not Path(f"{RESULT_CSV_FOLDER}/{party}.csv").exists():
         raise FileNotFoundError(
@@ -107,7 +122,7 @@ def predict_partyline(
         tqdm(total=len(votes)) as pbar,
     ):
         futures = [
-            pool.submit(process, i, row, manifesto_chroma_db, party, manifestos)
+            pool.submit(process, i, row, manifesto_chroma_db, party, manifestos, api_provider, model)
             for i, (_, row) in enumerate(votes.iterrows())
         ]
 
