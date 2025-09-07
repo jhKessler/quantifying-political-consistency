@@ -1,4 +1,4 @@
-THREADS = 2
+THREADS = 8
 DEEPSEEK_MODEL = "deepseek-chat"
 
 SIMILARITY_K = 5
